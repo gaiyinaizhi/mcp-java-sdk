@@ -8,6 +8,7 @@ import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.transport.HttpClientSseClientTransport;
 import io.modelcontextprotocol.server.transport.WebMvcSseServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
+import lombok.var;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.junit.jupiter.api.AfterEach;
@@ -42,8 +43,8 @@ class WebMvcSseCustomContextPathTests {
 		tomcatServer = TomcatTestUtil.createTomcatServer(CUSTOM_CONTEXT_PATH, PORT, TestConfig.class);
 
 		try {
-			tomcatServer.tomcat().start();
-			assertThat(tomcatServer.tomcat().getServer().getState()).isEqualTo(LifecycleState.STARTED);
+			tomcatServer.getTomcat().start();
+			assertThat(tomcatServer.getTomcat().getServer().getState()).isEqualTo(LifecycleState.STARTED);
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Failed to start Tomcat", e);
@@ -55,7 +56,7 @@ class WebMvcSseCustomContextPathTests {
 
 		clientBuilder = McpClient.sync(clientTransport);
 
-		mcpServerTransportProvider = tomcatServer.appContext().getBean(WebMvcSseServerTransportProvider.class);
+		mcpServerTransportProvider = tomcatServer.getAppContext().getBean(WebMvcSseServerTransportProvider.class);
 	}
 
 	@AfterEach
@@ -63,13 +64,13 @@ class WebMvcSseCustomContextPathTests {
 		if (mcpServerTransportProvider != null) {
 			mcpServerTransportProvider.closeGracefully().block();
 		}
-		if (tomcatServer.appContext() != null) {
-			tomcatServer.appContext().close();
+		if (tomcatServer.getAppContext() != null) {
+			tomcatServer.getAppContext().close();
 		}
-		if (tomcatServer.tomcat() != null) {
+		if (tomcatServer.getTomcat() != null) {
 			try {
-				tomcatServer.tomcat().stop();
-				tomcatServer.tomcat().destroy();
+				tomcatServer.getTomcat().stop();
+				tomcatServer.getTomcat().destroy();
 			}
 			catch (LifecycleException e) {
 				throw new RuntimeException("Failed to stop Tomcat", e);

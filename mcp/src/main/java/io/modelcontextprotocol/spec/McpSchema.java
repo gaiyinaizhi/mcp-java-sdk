@@ -5,10 +5,7 @@
 package io.modelcontextprotocol.spec;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -19,13 +16,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.util.Assert;
+import lombok.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Based on the <a href="http://www.jsonrpc.org/specification">JSON-RPC 2.0
  * specification</a> and the <a href=
- * "https://github.com/modelcontextprotocol/specification/blob/main/schema/2024-11-05/schema.ts">Model
+ * "https://github.com/modelcontextprotocol/specification/blob/main/schema/schema.ts">Model
  * Context Protocol Schema</a>.
  *
  * @author Christian Tzolov
@@ -131,12 +129,10 @@ public final class McpSchema {
 
 	}
 
-	public sealed interface Request
-			permits InitializeRequest, CallToolRequest, CreateMessageRequest, CompleteRequest, GetPromptRequest {
-
+	public interface Request {
 	}
 
-	private static final TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
+	private static final TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() {
 	};
 
 	/**
@@ -173,43 +169,53 @@ public final class McpSchema {
 	// ---------------------------
 	// JSON-RPC Message Types
 	// ---------------------------
-	public sealed interface JSONRPCMessage permits JSONRPCRequest, JSONRPCNotification, JSONRPCResponse {
-
-		String jsonrpc();
-
+	public interface JSONRPCMessage {
+		String getJsonrpc();
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record JSONRPCRequest( // @formatter:off
-			@JsonProperty("jsonrpc") String jsonrpc,
-			@JsonProperty("method") String method,
-			@JsonProperty("id") Object id,
-			@JsonProperty("params") Object params) implements JSONRPCMessage {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class JSONRPCRequest implements JSONRPCMessage {
+		@JsonProperty("jsonrpc") String jsonrpc;
+		@JsonProperty("method") String method;
+		@JsonProperty("id") Object id;
+		@JsonProperty("params") Object params;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record JSONRPCNotification( // @formatter:off
-			@JsonProperty("jsonrpc") String jsonrpc,
-			@JsonProperty("method") String method,
-			@JsonProperty("params") Object params) implements JSONRPCMessage {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class JSONRPCNotification implements JSONRPCMessage {
+		@JsonProperty("jsonrpc") String jsonrpc;
+		@JsonProperty("method") String method;
+		@JsonProperty("params") Object params;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record JSONRPCResponse( // @formatter:off
-			@JsonProperty("jsonrpc") String jsonrpc,
-			@JsonProperty("id") Object id,
-			@JsonProperty("result") Object result,
-			@JsonProperty("error") JSONRPCError error) implements JSONRPCMessage {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class JSONRPCResponse implements JSONRPCMessage {
+		@JsonProperty("jsonrpc") String jsonrpc;
+		@JsonProperty("id") Object id;
+		@JsonProperty("result") Object result;
+		@JsonProperty("error") JSONRPCError error;
 
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
 		@JsonIgnoreProperties(ignoreUnknown = true)
-		public record JSONRPCError(
-			@JsonProperty("code") int code,
-			@JsonProperty("message") String message,
-			@JsonProperty("data") Object data) {
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class JSONRPCError {
+			@JsonProperty("code") int code;
+			@JsonProperty("message") String message;
+			@JsonProperty("data") Object data;
 		}
 	}// @formatter:on
 
@@ -218,19 +224,25 @@ public final class McpSchema {
 	// ---------------------------
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record InitializeRequest( // @formatter:off
-		@JsonProperty("protocolVersion") String protocolVersion,
-		@JsonProperty("capabilities") ClientCapabilities capabilities,
-		@JsonProperty("clientInfo") Implementation clientInfo) implements Request {		
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class InitializeRequest implements Request {
+		@JsonProperty("protocolVersion") String protocolVersion;
+		@JsonProperty("capabilities") ClientCapabilities capabilities;
+		@JsonProperty("clientInfo") Implementation clientInfo;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record InitializeResult( // @formatter:off
-		@JsonProperty("protocolVersion") String protocolVersion,
-		@JsonProperty("capabilities") ServerCapabilities capabilities,
-		@JsonProperty("serverInfo") Implementation serverInfo,
-		@JsonProperty("instructions") String instructions) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class InitializeResult {
+		@JsonProperty("protocolVersion") String protocolVersion;
+		@JsonProperty("capabilities") ServerCapabilities capabilities;
+		@JsonProperty("serverInfo") Implementation serverInfo;
+		@JsonProperty("instructions") String instructions;
 	} // @formatter:on
 
 	/**
@@ -249,10 +261,13 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ClientCapabilities( // @formatter:off
-		@JsonProperty("experimental") Map<String, Object> experimental,
-		@JsonProperty("roots") RootCapabilities roots,
-		@JsonProperty("sampling") Sampling sampling) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ClientCapabilities {
+		@JsonProperty("experimental") Map<String, Object> experimental;
+		@JsonProperty("roots") RootCapabilities roots;
+		@JsonProperty("sampling") Sampling sampling;
 
 		/**
 		 * Roots define the boundaries of where servers can operate within the filesystem,
@@ -264,14 +279,17 @@ public final class McpSchema {
 		 * 		  has changed since the last time the server checked.
 		 */
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
-		@JsonIgnoreProperties(ignoreUnknown = true)	
-		public record RootCapabilities(
-			@JsonProperty("listChanged") Boolean listChanged) {
+		@JsonIgnoreProperties(ignoreUnknown = true)
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class RootCapabilities {
+			@JsonProperty("listChanged") Boolean listChanged;
 		}
 
 		/**
 		 * Provides a standardized way for servers to request LLM
-	 	 * sampling ("completions" or "generations") from language
+		 * sampling ("completions" or "generations") from language
 		 * models via clients. This flow allows clients to maintain
 		 * control over model access, selection, and permissions
 		 * while enabling servers to leverage AI capabilities—with
@@ -279,8 +297,10 @@ public final class McpSchema {
 		 * image-based interactions and optionally include context
 		 * from MCP servers in their prompts.
 		 */
-		@JsonInclude(JsonInclude.Include.NON_ABSENT)			
-		public record Sampling() {
+		@JsonInclude(JsonInclude.Include.NON_ABSENT)
+		@Data
+		@AllArgsConstructor
+		public static class Sampling {
 		}
 
 		public static Builder builder() {
@@ -315,36 +335,49 @@ public final class McpSchema {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ServerCapabilities( // @formatter:off
-	    @JsonProperty("completions") CompletionCapabilities completions,
-		@JsonProperty("experimental") Map<String, Object> experimental,
-		@JsonProperty("logging") LoggingCapabilities logging,
-		@JsonProperty("prompts") PromptCapabilities prompts,
-		@JsonProperty("resources") ResourceCapabilities resources,
-		@JsonProperty("tools") ToolCapabilities tools) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ServerCapabilities {
+		@JsonProperty("completions") CompletionCapabilities completions;
+		@JsonProperty("experimental") Map<String, Object> experimental;
+		@JsonProperty("logging") LoggingCapabilities logging;
+		@JsonProperty("prompts") PromptCapabilities prompts;
+		@JsonProperty("resources") ResourceCapabilities resources;
+		@JsonProperty("tools") ToolCapabilities tools;
 
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
-		public record CompletionCapabilities() {
-		}
-			
-		@JsonInclude(JsonInclude.Include.NON_ABSENT)
-		public record LoggingCapabilities() {
-		}
-	
-		@JsonInclude(JsonInclude.Include.NON_ABSENT)
-		public record PromptCapabilities(
-			@JsonProperty("listChanged") Boolean listChanged) {
+		public static class CompletionCapabilities {
 		}
 
+
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
-		public record ResourceCapabilities(
-			@JsonProperty("subscribe") Boolean subscribe,
-			@JsonProperty("listChanged") Boolean listChanged) {
+		public static class LoggingCapabilities {
 		}
 
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
-		public record ToolCapabilities(
-			@JsonProperty("listChanged") Boolean listChanged) {
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class PromptCapabilities {
+			@JsonProperty("listChanged") Boolean listChanged;
+		}
+
+		@JsonInclude(JsonInclude.Include.NON_ABSENT)
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class ResourceCapabilities {
+			@JsonProperty("subscribe") Boolean subscribe;
+			@JsonProperty("listChanged") Boolean listChanged;
+		}
+
+		@JsonInclude(JsonInclude.Include.NON_ABSENT)
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class ToolCapabilities {
+			@JsonProperty("listChanged") Boolean listChanged;
 		}
 
 		public static Builder builder() {
@@ -352,7 +385,6 @@ public final class McpSchema {
 		}
 
 		public static class Builder {
-
 			private CompletionCapabilities completions;
 			private Map<String, Object> experimental;
 			private LoggingCapabilities logging = new LoggingCapabilities();
@@ -398,9 +430,12 @@ public final class McpSchema {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record Implementation(// @formatter:off
-		@JsonProperty("name") String name,
-		@JsonProperty("version") String version) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class Implementation {
+		@JsonProperty("name") String name;
+		@JsonProperty("version") String version;
 	} // @formatter:on
 
 	// Existing Enums and Base Types (from previous implementation)
@@ -419,7 +454,7 @@ public final class McpSchema {
 	 */
 	public interface Annotated {
 
-		Annotations annotations();
+		Annotations getAnnotations();
 
 	}
 
@@ -437,9 +472,12 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record Annotations( // @formatter:off
-		@JsonProperty("audience") List<Role> audience,
-		@JsonProperty("priority") Double priority) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class Annotations {
+		@JsonProperty("audience") List<Role> audience;
+		@JsonProperty("priority") Double priority;
 	} // @formatter:on
 
 	/**
@@ -457,12 +495,15 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record Resource( // @formatter:off
-		@JsonProperty("uri") String uri,
-		@JsonProperty("name") String name,
-		@JsonProperty("description") String description,
-		@JsonProperty("mimeType") String mimeType,
-		@JsonProperty("annotations") Annotations annotations) implements Annotated {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class Resource implements Annotated {
+		@JsonProperty("uri") String uri;
+		@JsonProperty("name") String name;
+		@JsonProperty("description") String description;
+		@JsonProperty("mimeType") String mimeType;
+		@JsonProperty("annotations") Annotations annotations;
 	} // @formatter:on
 
 	/**
@@ -483,38 +524,53 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ResourceTemplate( // @formatter:off
-		@JsonProperty("uriTemplate") String uriTemplate,
-		@JsonProperty("name") String name,
-		@JsonProperty("description") String description,
-		@JsonProperty("mimeType") String mimeType,
-		@JsonProperty("annotations") Annotations annotations) implements Annotated {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ResourceTemplate implements Annotated {
+		@JsonProperty("uriTemplate") String uriTemplate;
+		@JsonProperty("name") String name;
+		@JsonProperty("description") String description;
+		@JsonProperty("mimeType") String mimeType;
+		@JsonProperty("annotations") Annotations annotations;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ListResourcesResult( // @formatter:off
-		@JsonProperty("resources") List<Resource> resources,
-		@JsonProperty("nextCursor") String nextCursor) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ListResourcesResult {
+		@JsonProperty("resources") List<Resource> resources;
+		@JsonProperty("nextCursor") String nextCursor;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ListResourceTemplatesResult( // @formatter:off
-		@JsonProperty("resourceTemplates") List<ResourceTemplate> resourceTemplates,
-		@JsonProperty("nextCursor") String nextCursor) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ListResourceTemplatesResult {
+		@JsonProperty("resourceTemplates") List<ResourceTemplate> resourceTemplates;
+		@JsonProperty("nextCursor") String nextCursor;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ReadResourceRequest( // @formatter:off
-		@JsonProperty("uri") String uri){
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ReadResourceRequest {
+		@JsonProperty("uri") String uri;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ReadResourceResult( // @formatter:off
-		@JsonProperty("contents") List<ResourceContents> contents){
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ReadResourceResult{
+		@JsonProperty("contents") List<ResourceContents> contents;
 	} // @formatter:on
 
 	/**
@@ -526,14 +582,20 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record SubscribeRequest( // @formatter:off
-		@JsonProperty("uri") String uri){
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SubscribeRequest{
+		@JsonProperty("uri") String uri;
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record UnsubscribeRequest( // @formatter:off
-		@JsonProperty("uri") String uri){
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class UnsubscribeRequest{
+		@JsonProperty("uri") String uri;
 	} // @formatter:on
 
 	/**
@@ -542,19 +604,19 @@ public final class McpSchema {
 	@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, include = As.PROPERTY)
 	@JsonSubTypes({ @JsonSubTypes.Type(value = TextResourceContents.class, name = "text"),
 			@JsonSubTypes.Type(value = BlobResourceContents.class, name = "blob") })
-	public sealed interface ResourceContents permits TextResourceContents, BlobResourceContents {
+	public interface ResourceContents {
 
 		/**
 		 * The URI of this resource.
 		 * @return the URI of this resource.
 		 */
-		String uri();
+		String getUri();
 
 		/**
 		 * The MIME type of this resource.
 		 * @return the MIME type of this resource.
 		 */
-		String mimeType();
+		String getMimeType();
 
 	}
 
@@ -568,10 +630,13 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record TextResourceContents( // @formatter:off
-		@JsonProperty("uri") String uri,
-		@JsonProperty("mimeType") String mimeType,
-		@JsonProperty("text") String text) implements ResourceContents {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class TextResourceContents implements ResourceContents {
+		@JsonProperty("uri") String uri;
+		@JsonProperty("mimeType") String mimeType;
+		@JsonProperty("text") String text;
 	} // @formatter:on
 
 	/**
@@ -585,10 +650,13 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record BlobResourceContents( // @formatter:off
-		@JsonProperty("uri") String uri,
-		@JsonProperty("mimeType") String mimeType,
-		@JsonProperty("blob") String blob) implements ResourceContents {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class BlobResourceContents implements ResourceContents {
+		@JsonProperty("uri") String uri;
+		@JsonProperty("mimeType") String mimeType;
+		@JsonProperty("blob") String blob;
 	} // @formatter:on
 
 	// ---------------------------
@@ -603,10 +671,13 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record Prompt( // @formatter:off
-		@JsonProperty("name") String name,
-		@JsonProperty("description") String description,
-		@JsonProperty("arguments") List<PromptArgument> arguments) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class Prompt {
+		@JsonProperty("name") String name;
+		@JsonProperty("description") String description;
+		@JsonProperty("arguments") List<PromptArgument> arguments;
 	} // @formatter:on
 
 	/**
@@ -618,10 +689,13 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record PromptArgument( // @formatter:off
-		@JsonProperty("name") String name,
-		@JsonProperty("description") String description,
-		@JsonProperty("required") Boolean required) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class PromptArgument {
+		@JsonProperty("name") String name;
+		@JsonProperty("description") String description;
+		@JsonProperty("required") Boolean required;
 	}// @formatter:on
 
 	/**
@@ -635,9 +709,12 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record PromptMessage( // @formatter:off
-		@JsonProperty("role") Role role,
-		@JsonProperty("content") Content content) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class PromptMessage {
+		@JsonProperty("role") Role role;
+		@JsonProperty("content") Content content;
 	} // @formatter:on
 
 	/**
@@ -649,9 +726,12 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ListPromptsResult( // @formatter:off
-		@JsonProperty("prompts") List<Prompt> prompts,
-		@JsonProperty("nextCursor") String nextCursor) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ListPromptsResult {
+		@JsonProperty("prompts") List<Prompt> prompts;
+		@JsonProperty("nextCursor") String nextCursor;
 	}// @formatter:on
 
 	/**
@@ -662,9 +742,12 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record GetPromptRequest(// @formatter:off
-		@JsonProperty("name") String name,
-		@JsonProperty("arguments") Map<String, Object> arguments) implements Request {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class GetPromptRequest implements Request {
+		@JsonProperty("name") String name;
+		@JsonProperty("arguments") Map<String, Object> arguments;
 	}// @formatter:off
 
 	/**
@@ -675,9 +758,12 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record GetPromptResult( // @formatter:off
-		@JsonProperty("description") String description,
-		@JsonProperty("messages") List<PromptMessage> messages) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class GetPromptResult {
+		@JsonProperty("description") String description;
+		@JsonProperty("messages") List<PromptMessage> messages;
 	} // @formatter:on
 
 	// ---------------------------
@@ -692,20 +778,26 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ListToolsResult( // @formatter:off
-		@JsonProperty("tools") List<Tool> tools,
-		@JsonProperty("nextCursor") String nextCursor) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ListToolsResult {
+		@JsonProperty("tools") List<Tool> tools;
+		@JsonProperty("nextCursor") String nextCursor;
 	}// @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record JsonSchema( // @formatter:off
-		@JsonProperty("type") String type,
-		@JsonProperty("properties") Map<String, Object> properties,
-		@JsonProperty("required") List<String> required,
-		@JsonProperty("additionalProperties") Boolean additionalProperties,
-		@JsonProperty("$defs") Map<String, Object> defs,
-		@JsonProperty("definitions") Map<String, Object> definitions) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class JsonSchema {
+		@JsonProperty("type") String type;
+		@JsonProperty("properties") Map<String, Object> properties;
+		@JsonProperty("required") List<String> required;
+		@JsonProperty("additionalProperties") Boolean additionalProperties;
+		@JsonProperty("$defs") Map<String, Object> defs;
+		@JsonProperty("definitions") Map<String, Object> definitions;
 	} // @formatter:on
 
 	/**
@@ -723,15 +815,18 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record Tool( // @formatter:off
-		@JsonProperty("name") String name,
-		@JsonProperty("description") String description,
-		@JsonProperty("inputSchema") JsonSchema inputSchema) {
-	
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class Tool {
+		@JsonProperty("name") String name;
+		@JsonProperty("description") String description;
+		@JsonProperty("inputSchema") JsonSchema inputSchema;
+
 		public Tool(String name, String description, String schema) {
 			this(name, description, parseSchema(schema));
 		}
-			
+
 	} // @formatter:on
 
 	private static JsonSchema parseSchema(String schema) {
@@ -753,12 +848,15 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record CallToolRequest(// @formatter:off
-		@JsonProperty("name") String name,
-		@JsonProperty("arguments") Map<String, Object> arguments) implements Request {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CallToolRequest implements Request {
+		@JsonProperty("name") String name;
+		@JsonProperty("arguments") Map<String, Object> arguments;
 
 		public CallToolRequest(String name, String jsonArguments) {
-			this(name, parseJsonArguments(jsonArguments));			
+			this(name, parseJsonArguments(jsonArguments));
 		}
 
 		private static Map<String, Object> parseJsonArguments(String jsonArguments) {
@@ -781,21 +879,16 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record CallToolResult( // @formatter:off
-		@JsonProperty("content") List<Content> content,
-		@JsonProperty("isError") Boolean isError) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CallToolResult {
+		@JsonProperty("content") List<Content> content;
+		@JsonProperty("isError") Boolean isError;
 
-		/**
-		 * Creates a new instance of {@link CallToolResult} with a string containing the
-		 * tool result.
-		 *
-		 * @param content The content of the tool result. This will be mapped to a one-sized list
-		 * 				  with a {@link TextContent} element.
-		 * @param isError If true, indicates that the tool execution failed and the content contains error information.
-		 *                If false or absent, indicates successful execution.
-		 */
 		public CallToolResult(String content, Boolean isError) {
-			this(List.of(new TextContent(content)), isError);
+			this.content = Collections.singletonList(new TextContent(content));
+			this.isError = isError;
 		}
 
 		/**
@@ -832,8 +925,8 @@ public final class McpSchema {
 			public Builder textContent(List<String> textContent) {
 				Assert.notNull(textContent, "textContent must not be null");
 				textContent.stream()
-					.map(TextContent::new)
-					.forEach(this.content::add);
+						.map(TextContent::new)
+						.forEach(this.content::add);
 				return this;
 			}
 
@@ -880,7 +973,6 @@ public final class McpSchema {
 				return new CallToolResult(content, isError);
 			}
 		}
-
 	} // @formatter:on
 
 	// ---------------------------
@@ -888,59 +980,67 @@ public final class McpSchema {
 	// ---------------------------
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ModelPreferences(// @formatter:off
-	@JsonProperty("hints") List<ModelHint> hints,
-	@JsonProperty("costPriority") Double costPriority,
-	@JsonProperty("speedPriority") Double speedPriority,
-	@JsonProperty("intelligencePriority") Double intelligencePriority) {
-	
-	public static Builder builder() {
-		return new Builder();
-	}
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ModelPreferences {
+		@JsonProperty("hints") List<ModelHint> hints;
+		@JsonProperty("costPriority") Double costPriority;
+		@JsonProperty("speedPriority") Double speedPriority;
+		@JsonProperty("intelligencePriority") Double intelligencePriority;
 
-	public static class Builder {
-		private List<ModelHint> hints;
-		private Double costPriority;
-		private Double speedPriority;
-		private Double intelligencePriority;
-
-		public Builder hints(List<ModelHint> hints) {
-			this.hints = hints;
-			return this;
+		public static Builder builder() {
+			return new Builder();
 		}
 
-		public Builder addHint(String name) {
-			if (this.hints == null) {
-				this.hints = new ArrayList<>();
+		public static class Builder {
+			private List<ModelHint> hints;
+			private Double costPriority;
+			private Double speedPriority;
+			private Double intelligencePriority;
+
+			public Builder hints(List<ModelHint> hints) {
+				this.hints = hints;
+				return this;
 			}
-			this.hints.add(new ModelHint(name));
-			return this;
-		}
 
-		public Builder costPriority(Double costPriority) {
-			this.costPriority = costPriority;
-			return this;
-		}
+			public Builder addHint(String name) {
+				if (this.hints == null) {
+					this.hints = new ArrayList<>();
+				}
+				this.hints.add(new ModelHint(name));
+				return this;
+			}
 
-		public Builder speedPriority(Double speedPriority) {
-			this.speedPriority = speedPriority;
-			return this;
-		}
+			public Builder costPriority(Double costPriority) {
+				this.costPriority = costPriority;
+				return this;
+			}
 
-		public Builder intelligencePriority(Double intelligencePriority) {
-			this.intelligencePriority = intelligencePriority;
-			return this;
-		}
+			public Builder speedPriority(Double speedPriority) {
+				this.speedPriority = speedPriority;
+				return this;
+			}
 
-		public ModelPreferences build() {
-			return new ModelPreferences(hints, costPriority, speedPriority, intelligencePriority);
+			public Builder intelligencePriority(Double intelligencePriority) {
+				this.intelligencePriority = intelligencePriority;
+				return this;
+			}
+
+			public ModelPreferences build() {
+				return new ModelPreferences(hints, costPriority, speedPriority, intelligencePriority);
+			}
 		}
-	}
-} // @formatter:on
+	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ModelHint(@JsonProperty("name") String name) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ModelHint {
+		@JsonProperty("name") String name;
+
 		public static ModelHint of(String name) {
 			return new ModelHint(name);
 		}
@@ -948,30 +1048,36 @@ public final class McpSchema {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record SamplingMessage(// @formatter:off
-		@JsonProperty("role") Role role,
-		@JsonProperty("content") Content content) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SamplingMessage {
+		@JsonProperty("role") Role role;
+		@JsonProperty("content") Content content;
 	} // @formatter:on
 
 	// Sampling and Message Creation
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record CreateMessageRequest(// @formatter:off
-		@JsonProperty("messages") List<SamplingMessage> messages,
-		@JsonProperty("modelPreferences") ModelPreferences modelPreferences,
-		@JsonProperty("systemPrompt") String systemPrompt,
-		@JsonProperty("includeContext") ContextInclusionStrategy includeContext,
-		@JsonProperty("temperature") Double temperature,
-		@JsonProperty("maxTokens") int maxTokens,
-		@JsonProperty("stopSequences") List<String> stopSequences, 			
-		@JsonProperty("metadata") Map<String, Object> metadata) implements Request {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CreateMessageRequest implements Request {
+		@JsonProperty("messages") List<SamplingMessage> messages;
+		@JsonProperty("modelPreferences") ModelPreferences modelPreferences;
+		@JsonProperty("systemPrompt") String systemPrompt;
+		@JsonProperty("includeContext") ContextInclusionStrategy includeContext;
+		@JsonProperty("temperature") Double temperature;
+		@JsonProperty("maxTokens") int maxTokens;
+		@JsonProperty("stopSequences") List<String> stopSequences;
+		@JsonProperty("metadata") Map<String, Object> metadata;
 
 		public enum ContextInclusionStrategy {
 			@JsonProperty("none") NONE,
 			@JsonProperty("thisServer") THIS_SERVER,
 			@JsonProperty("allServers") ALL_SERVERS
 		}
-		
+
 		public static Builder builder() {
 			return new Builder();
 		}
@@ -1028,19 +1134,22 @@ public final class McpSchema {
 
 			public CreateMessageRequest build() {
 				return new CreateMessageRequest(messages, modelPreferences, systemPrompt,
-					includeContext, temperature, maxTokens, stopSequences, metadata);
+						includeContext, temperature, maxTokens, stopSequences, metadata);
 			}
 		}
 	}// @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record CreateMessageResult(// @formatter:off
-		@JsonProperty("role") Role role,
-		@JsonProperty("content") Content content,
-		@JsonProperty("model") String model,
-		@JsonProperty("stopReason") StopReason stopReason) {
-		
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CreateMessageResult {
+		@JsonProperty("role") Role role;
+		@JsonProperty("content") Content content;
+		@JsonProperty("model") String model;
+		@JsonProperty("stopReason") StopReason stopReason;
+
 		public enum StopReason {
 			@JsonProperty("endTurn") END_TURN,
 			@JsonProperty("stopSequence") STOP_SEQUENCE,
@@ -1093,22 +1202,33 @@ public final class McpSchema {
 	// ---------------------------
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record PaginatedRequest(@JsonProperty("cursor") String cursor) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class PaginatedRequest {
+		@JsonProperty("cursor") String cursor;
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record PaginatedResult(@JsonProperty("nextCursor") String nextCursor) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class PaginatedResult {
+		@JsonProperty("nextCursor") String nextCursor;
 	}
 
 	// ---------------------------
 	// Progress and Logging
 	// ---------------------------
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ProgressNotification(// @formatter:off
-		@JsonProperty("progressToken") String progressToken,
-		@JsonProperty("progress") double progress,
-		@JsonProperty("total") Double total) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ProgressNotification {
+		@JsonProperty("progressToken") String progressToken;
+		@JsonProperty("progress") double progress;
+		@JsonProperty("total") Double total;
 	}// @formatter:on
 
 	/**
@@ -1117,15 +1237,18 @@ public final class McpSchema {
 	 * setting minimum log levels, with servers sending notifications containing severity
 	 * levels, optional logger names, and arbitrary JSON-serializable data.
 	 *
-	 * @param level The severity levels. The minimum log level is set by the client.
+	 * @param level The severity levels. The mimimum log level is set by the client.
 	 * @param logger The logger that generated the message.
 	 * @param data JSON-serializable logging data.
 	 */
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record LoggingMessageNotification(// @formatter:off
-		@JsonProperty("level") LoggingLevel level,
-		@JsonProperty("logger") String logger,
-		@JsonProperty("data") String data) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class LoggingMessageNotification {
+		@JsonProperty("level") LoggingLevel level;
+		@JsonProperty("logger") String logger;
+		@JsonProperty("data") String data;
 
 		public static Builder builder() {
 			return new Builder();
@@ -1181,72 +1304,91 @@ public final class McpSchema {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record SetLevelRequest(@JsonProperty("level") LoggingLevel level) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SetLevelRequest {
+		@JsonProperty("level") LoggingLevel level;
 	}
 
 	// ---------------------------
 	// Autocomplete
 	// ---------------------------
-	public sealed interface CompleteReference permits PromptReference, ResourceReference {
+	public interface CompleteReference {
 
-		String type();
+		String getType();
 
-		String identifier();
+		String getIdentifier();
 
 	}
 
-	@JsonInclude(JsonInclude.Include.NON_ABSENT)
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record PromptReference(// @formatter:off
-		@JsonProperty("type") String type,
-		@JsonProperty("name") String name) implements McpSchema.CompleteReference {
+	public interface PromptOrResourceReference extends CompleteReference {
+		String getType();
+		String getIdentifier();
+	}
 
-		public PromptReference(String name) {
-			this("ref/prompt", name);
-		}
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class PromptReference implements PromptOrResourceReference {
+		@JsonProperty("type") String type;
+		@JsonProperty("name") String name;
 
 		@Override
-		public String identifier() {
-			return name();
+		public String getIdentifier() {
+			return getName();
 		}
 	}// @formatter:on
 
-	@JsonInclude(JsonInclude.Include.NON_ABSENT)
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ResourceReference(// @formatter:off
-		@JsonProperty("type") String type,
-		@JsonProperty("uri") String uri) implements McpSchema.CompleteReference {
-
-		public ResourceReference(String uri) {
-			this("ref/resource", uri);
-		}
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ResourceReference implements PromptOrResourceReference {
+		@JsonProperty("type") String type;
+		@JsonProperty("uri") String uri;
 
 		@Override
-		public String identifier() {
-			return uri();
+		public String getIdentifier() {
+			return getUri();
 		}
 	}// @formatter:on
 
+
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record CompleteRequest(// @formatter:off
-		@JsonProperty("ref") McpSchema.CompleteReference ref,
-		@JsonProperty("argument") CompleteArgument argument) implements Request {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CompleteRequest implements Request {
+		@JsonProperty("ref") PromptOrResourceReference ref;
 
-		public record CompleteArgument(
-			@JsonProperty("name") String name,
-			@JsonProperty("value") String value) {
+		@JsonProperty("argument") CompleteArgument argument;
+
+
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class CompleteArgument {
+			@JsonProperty("name") String name;
+			@JsonProperty("value") String value;
 		}// @formatter:on
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record CompleteResult(@JsonProperty("completion") CompleteCompletion completion) { // @formatter:off
-			
-		public record CompleteCompletion(
-			@JsonProperty("values") List<String> values,
-			@JsonProperty("total") Integer total,
-			@JsonProperty("hasMore") Boolean hasMore) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CompleteResult {
+		@JsonProperty("completion") CompleteCompletion completion;
+
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class CompleteCompletion {
+			@JsonProperty("values") List<String> values;
+			@JsonProperty("total") Integer total;
+			@JsonProperty("hasMore") Boolean hasMore;
 		}// @formatter:on
 	}
 
@@ -1257,7 +1399,7 @@ public final class McpSchema {
 	@JsonSubTypes({ @JsonSubTypes.Type(value = TextContent.class, name = "text"),
 			@JsonSubTypes.Type(value = ImageContent.class, name = "image"),
 			@JsonSubTypes.Type(value = EmbeddedResource.class, name = "resource") })
-	public sealed interface Content permits TextContent, ImageContent, EmbeddedResource {
+	public interface Content {
 
 		default String type() {
 			if (this instanceof TextContent) {
@@ -1276,10 +1418,13 @@ public final class McpSchema {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record TextContent( // @formatter:off
-		@JsonProperty("audience") List<Role> audience,
-		@JsonProperty("priority") Double priority,
-		@JsonProperty("text") String text) implements Content { // @formatter:on
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class TextContent implements Content { // @formatter:on
+		@JsonProperty("audience") List<Role> audience;
+		@JsonProperty("priority") Double priority;
+		@JsonProperty("text") String text;
 
 		public TextContent(String content) {
 			this(null, null, content);
@@ -1288,19 +1433,25 @@ public final class McpSchema {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ImageContent( // @formatter:off
-		@JsonProperty("audience") List<Role> audience,
-		@JsonProperty("priority") Double priority,
-		@JsonProperty("data") String data,
-		@JsonProperty("mimeType") String mimeType) implements Content { // @formatter:on
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ImageContent implements Content { // @formatter:on
+		@JsonProperty("audience") List<Role> audience;
+		@JsonProperty("priority") Double priority;
+		@JsonProperty("data") String data;
+		@JsonProperty("mimeType") String mimeType;
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record EmbeddedResource( // @formatter:off
-		@JsonProperty("audience") List<Role> audience,
-		@JsonProperty("priority") Double priority,
-		@JsonProperty("resource") ResourceContents resource) implements Content { // @formatter:on
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class EmbeddedResource implements Content { // @formatter:on
+		@JsonProperty("audience") List<Role> audience;
+		@JsonProperty("priority") Double priority;
+		@JsonProperty("resource") ResourceContents resource;
 	}
 
 	// ---------------------------
@@ -1318,9 +1469,12 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record Root( // @formatter:off
-		@JsonProperty("uri") String uri,
-		@JsonProperty("name") String name) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class Root {
+		@JsonProperty("uri") String uri;
+		@JsonProperty("name") String name;
 	} // @formatter:on
 
 	/**
@@ -1333,8 +1487,11 @@ public final class McpSchema {
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public record ListRootsResult( // @formatter:off
-		@JsonProperty("roots") List<Root> roots) {
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ListRootsResult {
+		@JsonProperty("roots") List<Root> roots;
 	} // @formatter:on
 
 }

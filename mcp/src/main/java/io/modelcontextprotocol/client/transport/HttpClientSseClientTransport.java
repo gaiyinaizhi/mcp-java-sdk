@@ -5,13 +5,8 @@ package io.modelcontextprotocol.client.transport;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,6 +20,17 @@ import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCMessage;
 import io.modelcontextprotocol.util.Assert;
 import io.modelcontextprotocol.util.Utils;
+import lombok.var;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Method;
+import org.apache.hc.core5.http.config.Http1Config;
+import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -70,7 +76,7 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 	private static final String DEFAULT_SSE_ENDPOINT = "/sse";
 
 	/** Base URI for the MCP server */
-	private final URI baseUri;
+	private final String baseUri;
 
 	/** SSE endpoint path */
 	private final String sseEndpoint;
@@ -82,10 +88,10 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 	 * HTTP client for sending messages to the server. Uses HTTP POST over the message
 	 * endpoint
 	 */
-	private final HttpClient httpClient;
+	private CloseableHttpAsyncClient httpClient;
 
 	/** HTTP request builder for building requests to send messages to the server */
-	private final HttpRequest.Builder requestBuilder;
+	// private final HttpRequest.Builder requestBuilder;
 
 	/** JSON object mapper for message serialization/deserialization */
 	protected ObjectMapper objectMapper;
@@ -105,12 +111,18 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 	/**
 	 * Creates a new transport instance with default HTTP client and object mapper.
 	 * @param baseUri the base URI of the MCP server
-	 * @deprecated Use {@link HttpClientSseClientTransport#builder(String)} instead. This
 	 * constructor will be removed in future versions.
 	 */
-	@Deprecated(forRemoval = true)
 	public HttpClientSseClientTransport(String baseUri) {
-		this(HttpClient.newBuilder(), baseUri, new ObjectMapper());
+		this(HttpAsyncClientBuilder.create(), baseUri, DEFAULT_SSE_ENDPOINT, new ObjectMapper());
+	}
+	/**
+	 * Creates a new transport instance with default HTTP client and object mapper.
+	 * @param baseUri the base URI of the MCP server
+	 * constructor will be removed in future versions.
+	 */
+	public HttpClientSseClientTransport(String baseUri, String sseEndpoint) {
+		this(HttpAsyncClientBuilder.create(), baseUri, sseEndpoint, new ObjectMapper());
 	}
 
 	/**
@@ -119,73 +131,19 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 	 * @param baseUri the base URI of the MCP server
 	 * @param objectMapper the object mapper for JSON serialization/deserialization
 	 * @throws IllegalArgumentException if objectMapper or clientBuilder is null
-	 * @deprecated Use {@link HttpClientSseClientTransport#builder(String)} instead. This
-	 * constructor will be removed in future versions.
 	 */
-	@Deprecated(forRemoval = true)
-	public HttpClientSseClientTransport(HttpClient.Builder clientBuilder, String baseUri, ObjectMapper objectMapper) {
-		this(clientBuilder, baseUri, DEFAULT_SSE_ENDPOINT, objectMapper);
-	}
-
-	/**
-	 * Creates a new transport instance with custom HTTP client builder and object mapper.
-	 * @param clientBuilder the HTTP client builder to use
-	 * @param baseUri the base URI of the MCP server
-	 * @param sseEndpoint the SSE endpoint path
-	 * @param objectMapper the object mapper for JSON serialization/deserialization
-	 * @throws IllegalArgumentException if objectMapper or clientBuilder is null
-	 * @deprecated Use {@link HttpClientSseClientTransport#builder(String)} instead. This
-	 * constructor will be removed in future versions.
-	 */
-	@Deprecated(forRemoval = true)
-	public HttpClientSseClientTransport(HttpClient.Builder clientBuilder, String baseUri, String sseEndpoint,
-			ObjectMapper objectMapper) {
-		this(clientBuilder, HttpRequest.newBuilder(), baseUri, sseEndpoint, objectMapper);
-	}
-
-	/**
-	 * Creates a new transport instance with custom HTTP client builder, object mapper,
-	 * and headers.
-	 * @param clientBuilder the HTTP client builder to use
-	 * @param requestBuilder the HTTP request builder to use
-	 * @param baseUri the base URI of the MCP server
-	 * @param sseEndpoint the SSE endpoint path
-	 * @param objectMapper the object mapper for JSON serialization/deserialization
-	 * @throws IllegalArgumentException if objectMapper, clientBuilder, or headers is null
-	 * @deprecated Use {@link HttpClientSseClientTransport#builder(String)} instead. This
-	 * constructor will be removed in future versions.
-	 */
-	@Deprecated(forRemoval = true)
-	public HttpClientSseClientTransport(HttpClient.Builder clientBuilder, HttpRequest.Builder requestBuilder,
-			String baseUri, String sseEndpoint, ObjectMapper objectMapper) {
-		this(clientBuilder.connectTimeout(Duration.ofSeconds(10)).build(), requestBuilder, baseUri, sseEndpoint,
-				objectMapper);
-	}
-
-	/**
-	 * Creates a new transport instance with custom HTTP client builder, object mapper,
-	 * and headers.
-	 * @param httpClient the HTTP client to use
-	 * @param requestBuilder the HTTP request builder to use
-	 * @param baseUri the base URI of the MCP server
-	 * @param sseEndpoint the SSE endpoint path
-	 * @param objectMapper the object mapper for JSON serialization/deserialization
-	 * @throws IllegalArgumentException if objectMapper, clientBuilder, or headers is null
-	 */
-	HttpClientSseClientTransport(HttpClient httpClient, HttpRequest.Builder requestBuilder, String baseUri,
-			String sseEndpoint, ObjectMapper objectMapper) {
+	public HttpClientSseClientTransport(HttpAsyncClientBuilder clientBuilder, String baseUri, String sseEndpoint, ObjectMapper objectMapper) {
 		Assert.notNull(objectMapper, "ObjectMapper must not be null");
 		Assert.hasText(baseUri, "baseUri must not be empty");
-		Assert.hasText(sseEndpoint, "sseEndpoint must not be empty");
-		Assert.notNull(httpClient, "httpClient must not be null");
-		Assert.notNull(requestBuilder, "requestBuilder must not be null");
-		this.baseUri = URI.create(baseUri);
+		Assert.notNull(clientBuilder, "clientBuilder must not be null");
+		this.baseUri = baseUri;
 		this.sseEndpoint = sseEndpoint;
 		this.objectMapper = objectMapper;
-		this.httpClient = httpClient;
-		this.requestBuilder = requestBuilder;
-
-		this.sseClient = new FlowSseClient(this.httpClient, requestBuilder);
+		var globalConfig = RequestConfig.custom().setConnectTimeout(Timeout.ofSeconds(10)).build();
+		clientBuilder.setDefaultRequestConfig(globalConfig);
+		this.httpClient = clientBuilder.build();
+		this.httpClient.start();
+		this.sseClient = new FlowSseClient(this.httpClient);
 	}
 
 	/**
@@ -206,20 +164,17 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 
 		private String sseEndpoint = DEFAULT_SSE_ENDPOINT;
 
-		private HttpClient.Builder clientBuilder = HttpClient.newBuilder()
-			.version(HttpClient.Version.HTTP_1_1)
-			.connectTimeout(Duration.ofSeconds(10));
+		private HttpAsyncClientBuilder clientBuilder = HttpAsyncClientBuilder.create().setHttp1Config(Http1Config.DEFAULT);
 
 		private ObjectMapper objectMapper = new ObjectMapper();
-
-		private HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-			.header("Content-Type", "application/json");
 
 		/**
 		 * Creates a new builder instance.
 		 */
 		Builder() {
 			// Default constructor
+			var globalConfig = RequestConfig.custom().setConnectTimeout(Timeout.ofSeconds(10)).build();
+			clientBuilder.setDefaultRequestConfig(globalConfig);
 		}
 
 		/**
@@ -229,7 +184,7 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		 * This constructor is deprecated and will be removed or made {@code protected} or
 		 * {@code private} in a future release.
 		 */
-		@Deprecated(forRemoval = true)
+		@Deprecated()
 		public Builder(String baseUri) {
 			Assert.hasText(baseUri, "baseUri must not be empty");
 			this.baseUri = baseUri;
@@ -262,7 +217,7 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		 * @param clientBuilder the HTTP client builder
 		 * @return this builder
 		 */
-		public Builder clientBuilder(HttpClient.Builder clientBuilder) {
+		public Builder clientBuilder(HttpAsyncClientBuilder clientBuilder) {
 			Assert.notNull(clientBuilder, "clientBuilder must not be null");
 			this.clientBuilder = clientBuilder;
 			return this;
@@ -273,31 +228,9 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		 * @param clientCustomizer the consumer to customize the HTTP client builder
 		 * @return this builder
 		 */
-		public Builder customizeClient(final Consumer<HttpClient.Builder> clientCustomizer) {
+		public Builder customizeClient(final Consumer<HttpAsyncClientBuilder> clientCustomizer) {
 			Assert.notNull(clientCustomizer, "clientCustomizer must not be null");
 			clientCustomizer.accept(clientBuilder);
-			return this;
-		}
-
-		/**
-		 * Sets the HTTP request builder.
-		 * @param requestBuilder the HTTP request builder
-		 * @return this builder
-		 */
-		public Builder requestBuilder(HttpRequest.Builder requestBuilder) {
-			Assert.notNull(requestBuilder, "requestBuilder must not be null");
-			this.requestBuilder = requestBuilder;
-			return this;
-		}
-
-		/**
-		 * Customizes the HTTP client builder.
-		 * @param requestCustomizer the consumer to customize the HTTP request builder
-		 * @return this builder
-		 */
-		public Builder customizeRequest(final Consumer<HttpRequest.Builder> requestCustomizer) {
-			Assert.notNull(requestCustomizer, "requestCustomizer must not be null");
-			requestCustomizer.accept(requestBuilder);
 			return this;
 		}
 
@@ -317,7 +250,7 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		 * @return a new transport instance
 		 */
 		public HttpClientSseClientTransport build() {
-			return new HttpClientSseClientTransport(clientBuilder.build(), requestBuilder, baseUri, sseEndpoint,
+			return new HttpClientSseClientTransport(clientBuilder, baseUri, sseEndpoint,
 					objectMapper);
 		}
 
@@ -341,8 +274,7 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 		CompletableFuture<Void> future = new CompletableFuture<>();
 		connectionFuture.set(future);
 
-		URI clientUri = Utils.resolveUri(this.baseUri, this.sseEndpoint);
-		sseClient.subscribe(clientUri.toString(), new FlowSseClient.SseEventHandler() {
+		sseClient.subscribe(this.baseUri + this.sseEndpoint, new FlowSseClient.SseEventHandler() {
 			@Override
 			public void onEvent(SseEvent event) {
 				if (isClosing) {
@@ -350,18 +282,18 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 				}
 
 				try {
-					if (ENDPOINT_EVENT_TYPE.equals(event.type())) {
-						String endpoint = event.data();
+					if (ENDPOINT_EVENT_TYPE.equals(event.getType())) {
+						String endpoint = event.getData();
 						messageEndpoint.set(endpoint);
 						closeLatch.countDown();
 						future.complete(null);
 					}
-					else if (MESSAGE_EVENT_TYPE.equals(event.type())) {
-						JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(objectMapper, event.data());
+					else if (MESSAGE_EVENT_TYPE.equals(event.getType())) {
+						JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(objectMapper, event.getData());
 						handler.apply(Mono.just(message)).subscribe();
 					}
 					else {
-						logger.error("Received unrecognized SSE event type: {}", event.type());
+						logger.error("Received unrecognized SSE event type: {}", event.getType());
 					}
 				}
 				catch (IOException e) {
@@ -414,18 +346,24 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 
 		try {
 			String jsonText = this.objectMapper.writeValueAsString(message);
-			URI requestUri = Utils.resolveUri(baseUri, endpoint);
-			HttpRequest request = this.requestBuilder.uri(requestUri)
-				.POST(HttpRequest.BodyPublishers.ofString(jsonText))
-				.build();
+			var request = SimpleHttpRequest.create(Method.POST, URI.create(this.baseUri + endpoint));
+			request.setBody(jsonText, ContentType.APPLICATION_JSON);
 
-			return Mono.fromFuture(
-					httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding()).thenAccept(response -> {
-						if (response.statusCode() != 200 && response.statusCode() != 201 && response.statusCode() != 202
-								&& response.statusCode() != 206) {
-							logger.error("Error sending message: {}", response.statusCode());
-						}
-					}));
+			var future = httpClient.execute(request, new FutureCallback<SimpleHttpResponse>() {
+				@Override
+				public void completed(SimpleHttpResponse response) {
+				}
+
+				@Override
+				public void failed(Exception ex) {
+					logger.error("Error sending message: {}", ex.getMessage());
+				}
+
+				@Override
+				public void cancelled() {
+				}
+			});
+			return Mono.fromFuture(toCompletableFutureDiscard(future));
 		}
 		catch (IOException e) {
 			if (!isClosing) {
@@ -433,6 +371,17 @@ public class HttpClientSseClientTransport implements McpClientTransport {
 			}
 			return Mono.empty();
 		}
+	}
+
+	public static CompletableFuture<Void> toCompletableFutureDiscard(Future<?> future) {
+		return CompletableFuture.supplyAsync(() -> {
+			try {
+				future.get();  // blocking
+				return null;
+			} catch (InterruptedException | ExecutionException e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 
 	/**

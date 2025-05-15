@@ -19,6 +19,7 @@ import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpServerSession;
 import io.modelcontextprotocol.spec.McpServerTransport;
+import io.modelcontextprotocol.util.Utils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -134,8 +135,8 @@ class StdioServerTransportProviderTests {
 			assertThat(message).isNotNull();
 			assertThat(message).isInstanceOf(McpSchema.JSONRPCRequest.class);
 			McpSchema.JSONRPCRequest request = (McpSchema.JSONRPCRequest) message;
-			assertThat(request.method()).isEqualTo("test");
-			assertThat(request.id()).isEqualTo(1);
+			assertThat(request.getMethod()).isEqualTo("test");
+			assertThat(request.getId()).isEqualTo(1);
 		}).verifyComplete();
 	}
 
@@ -146,7 +147,7 @@ class StdioServerTransportProviderTests {
 
 		// Send notification
 		String method = "testNotification";
-		Map<String, Object> params = Map.of("key", "value");
+		Map<String, Object> params = Utils.ofMap("key", "value");
 
 		StepVerifier.create(transportProvider.notifyClients(method, params)).verifyComplete();
 
@@ -187,7 +188,7 @@ class StdioServerTransportProviderTests {
 
 		transportProvider = new StdioServerTransportProvider(objectMapper);
 		// Send notification before setting session factory
-		StepVerifier.create(transportProvider.notifyClients("testNotification", Map.of("key", "value")))
+		StepVerifier.create(transportProvider.notifyClients("testNotification", Utils.ofMap("key", "value")))
 			.verifyErrorSatisfies(error -> {
 				assertThat(error).isInstanceOf(McpError.class);
 			});

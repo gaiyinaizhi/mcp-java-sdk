@@ -7,8 +7,7 @@ package io.modelcontextprotocol.util;
 import reactor.util.annotation.Nullable;
 
 import java.net.URI;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Miscellaneous utility methods.
@@ -30,7 +29,7 @@ public final class Utils {
 	 * @see Character#isWhitespace
 	 */
 	public static boolean hasText(@Nullable String str) {
-		return (str != null && !str.isBlank());
+		return (str != null && !str.isEmpty());
 	}
 
 	/**
@@ -102,6 +101,27 @@ public final class Utils {
 			basePath = basePath.substring(0, basePath.length() - 1);
 		}
 		return endpointPath.startsWith(basePath);
+	}
+
+	public static  <T> List<T> ofList(T... item) {
+		return new ArrayList<>(Arrays.asList(item));
+	}
+
+	public static <K,V> Map<K, V>  ofMap(K key, V value) {
+		Map<K, V> map = new HashMap<>();
+		map.put(key, value);
+		return map;
+	}
+	public static <K,V> Map<K, V> ofJsonMap(Object...objs) {
+		Map<K, V> map = new HashMap<>();
+		for (int i = 0; i < objs.length / 2; i++) {
+			K key = (K) objs[i * 2];
+			V value = (V) objs[i * 2 + 1];
+			if (value != null) {
+				map.put(key, value);
+			}
+		}
+		return map;
 	}
 
 }

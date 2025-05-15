@@ -54,9 +54,9 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>17</java.version>
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.target>17</maven.compiler.target>
+		<java.version>8</java.version>
+		<maven.compiler.source>8</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
 		<surefireArgLine/>
 
 		<assert4j.version>3.26.3</assert4j.version>
@@ -91,7 +91,7 @@
 		<asciidoctorj-pdf.version>1.6.2</asciidoctorj-pdf.version>
 		<junit-jupiter.version>5.10.5</junit-jupiter.version>
 		<tomcat.version>11.0.2</tomcat.version>
-		<jakarta.servlet.version>6.1.0</jakarta.servlet.version>
+		<jakarta.servlet.version>5.0.0</jakarta.servlet.version>
 		<awaitility.version>4.2.0</awaitility.version>
 		<bnd-maven-plugin.version>7.1.0</bnd-maven-plugin.version>
 		<json-unit-assertj.version>4.1.0</json-unit-assertj.version>
@@ -101,14 +101,14 @@
 	<modules>
 		<module>mcp-bom</module>
 		<module>mcp</module>
-		<module>mcp-spring/mcp-spring-webflux</module>
-		<module>mcp-spring/mcp-spring-webmvc</module>
-		<module>mcp-test</module>
+		<!--<module>mcp-spring/mcp-spring-webflux</module>
+		<module>mcp-spring/mcp-spring-webmvc</module>-->
+		<!--<module>mcp-test</module>-->
 	</modules>
 
 	<build>
 		<plugins>
-			<plugin>
+			<!--<plugin>
 				<groupId>io.spring.javaformat</groupId>
 				<artifactId>spring-javaformat-maven-plugin</artifactId>
 				<version>${spring-javaformat-maven-plugin.version}</version>
@@ -121,7 +121,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin>-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
@@ -132,7 +132,6 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven-compiler-plugin.version}</version>
 				<configuration>
-					<release>${java.version}</release>
 					<compilerArgs>
 						<compilerArg>-parameters</compilerArg>
 					</compilerArgs>
@@ -354,7 +353,7 @@
 		</dependencies>
 	</dependencyManagement>
 
-
+<!--
 	<repositories>
 		<repository>
 			<id>maven-central</id>
@@ -365,6 +364,13 @@
 			<releases>
 				<enabled>true</enabled>
 			</releases>
+		</repository>
+	</repositories>-->
+
+	<repositories>
+		<repository>
+			<id>aliyun</id>
+			<url>https://maven.aliyun.com/repository/central</url>
 		</repository>
 	</repositories>
 

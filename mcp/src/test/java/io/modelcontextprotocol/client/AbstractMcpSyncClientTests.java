@@ -27,6 +27,8 @@ import io.modelcontextprotocol.spec.McpSchema.SubscribeRequest;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 import io.modelcontextprotocol.spec.McpSchema.UnsubscribeRequest;
+import io.modelcontextprotocol.util.Utils;
+import lombok.var;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -165,18 +167,18 @@ public abstract class AbstractMcpSyncClientTests {
 			ListToolsResult tools = mcpSyncClient.listTools(null);
 
 			assertThat(tools).isNotNull().satisfies(result -> {
-				assertThat(result.tools()).isNotNull().isNotEmpty();
+				assertThat(result.getTools()).isNotNull().isNotEmpty();
 
-				Tool firstTool = result.tools().get(0);
-				assertThat(firstTool.name()).isNotNull();
-				assertThat(firstTool.description()).isNotNull();
+				Tool firstTool = result.getTools().get(0);
+				assertThat(firstTool.getName()).isNotNull();
+				assertThat(firstTool.getDescription()).isNotNull();
 			});
 		});
 	}
 
 	@Test
 	void testCallToolsWithoutInitialization() {
-		verifyCallTimesOut(client -> client.callTool(new CallToolRequest("add", Map.of("a", 3, "b", 4))),
+		verifyCallTimesOut(client -> client.callTool(new CallToolRequest("add", Utils.ofJsonMap("a", 3, "b", 4))),
 				"calling tools");
 	}
 
@@ -184,17 +186,17 @@ public abstract class AbstractMcpSyncClientTests {
 	void testCallTools() {
 		withClient(createMcpTransport(), mcpSyncClient -> {
 			mcpSyncClient.initialize();
-			CallToolResult toolResult = mcpSyncClient.callTool(new CallToolRequest("add", Map.of("a", 3, "b", 4)));
+			CallToolResult toolResult = mcpSyncClient.callTool(new CallToolRequest("add", Utils.ofJsonMap("a", 3, "b", 4)));
 
 			assertThat(toolResult).isNotNull().satisfies(result -> {
 
-				assertThat(result.content()).hasSize(1);
+				assertThat(result.getContent()).hasSize(1);
 
-				TextContent content = (TextContent) result.content().get(0);
+				TextContent content = (TextContent) result.getContent().get(0);
 
 				assertThat(content).isNotNull();
-				assertThat(content.text()).isNotNull();
-				assertThat(content.text()).contains("7");
+				assertThat(content.getText()).isNotNull();
+				assertThat(content.getText()).contains("7");
 			});
 		});
 	}
@@ -214,7 +216,7 @@ public abstract class AbstractMcpSyncClientTests {
 
 	@Test
 	void testCallToolWithoutInitialization() {
-		CallToolRequest callToolRequest = new CallToolRequest("echo", Map.of("message", TEST_MESSAGE));
+		CallToolRequest callToolRequest = new CallToolRequest("echo", Utils.ofMap("message", TEST_MESSAGE));
 		verifyCallTimesOut(client -> client.callTool(callToolRequest), "calling tools");
 	}
 
@@ -222,13 +224,13 @@ public abstract class AbstractMcpSyncClientTests {
 	void testCallTool() {
 		withClient(createMcpTransport(), mcpSyncClient -> {
 			mcpSyncClient.initialize();
-			CallToolRequest callToolRequest = new CallToolRequest("echo", Map.of("message", TEST_MESSAGE));
+			CallToolRequest callToolRequest = new CallToolRequest("echo", Utils.ofMap("message", TEST_MESSAGE));
 
 			CallToolResult callToolResult = mcpSyncClient.callTool(callToolRequest);
 
 			assertThat(callToolResult).isNotNull().satisfies(result -> {
-				assertThat(result.content()).isNotNull();
-				assertThat(result.isError()).isNull();
+				assertThat(result.getContent()).isNotNull();
+				assertThat(result.getIsError()).isNull();
 			});
 		});
 	}
@@ -236,7 +238,7 @@ public abstract class AbstractMcpSyncClientTests {
 	@Test
 	void testCallToolWithInvalidTool() {
 		withClient(createMcpTransport(), mcpSyncClient -> {
-			CallToolRequest invalidRequest = new CallToolRequest("nonexistent_tool", Map.of("message", TEST_MESSAGE));
+			CallToolRequest invalidRequest = new CallToolRequest("nonexistent_tool", Utils.ofMap("message", TEST_MESSAGE));
 
 			assertThatThrownBy(() -> mcpSyncClient.callTool(invalidRequest)).isInstanceOf(Exception.class);
 		});
@@ -268,12 +270,12 @@ public abstract class AbstractMcpSyncClientTests {
 			ListResourcesResult resources = mcpSyncClient.listResources(null);
 
 			assertThat(resources).isNotNull().satisfies(result -> {
-				assertThat(result.resources()).isNotNull();
+				assertThat(result.getResources()).isNotNull();
 
-				if (!result.resources().isEmpty()) {
-					Resource firstResource = result.resources().get(0);
-					assertThat(firstResource.uri()).isNotNull();
-					assertThat(firstResource.name()).isNotNull();
+				if (!result.getResources().isEmpty()) {
+					Resource firstResource = result.getResources().get(0);
+					assertThat(firstResource.getUri()).isNotNull();
+					assertThat(firstResource.getName()).isNotNull();
 				}
 			});
 		});
@@ -319,7 +321,7 @@ public abstract class AbstractMcpSyncClientTests {
 			Root root = new Root("file:///test/path/to/remove", "root-to-remove");
 			assertThatCode(() -> {
 				mcpSyncClient.addRoot(root);
-				mcpSyncClient.removeRoot(root.uri());
+				mcpSyncClient.removeRoot(root.getUri());
 			}).doesNotThrowAnyException();
 		});
 	}
@@ -344,12 +346,12 @@ public abstract class AbstractMcpSyncClientTests {
 			mcpSyncClient.initialize();
 			ListResourcesResult resources = mcpSyncClient.listResources(null);
 
-			if (!resources.resources().isEmpty()) {
-				Resource firstResource = resources.resources().get(0);
+			if (!resources.getResources().isEmpty()) {
+				Resource firstResource = resources.getResources().get(0);
 				ReadResourceResult result = mcpSyncClient.readResource(firstResource);
 
 				assertThat(result).isNotNull();
-				assertThat(result.contents()).isNotNull();
+				assertThat(result.getContents()).isNotNull();
 			}
 		});
 	}
@@ -366,7 +368,7 @@ public abstract class AbstractMcpSyncClientTests {
 			ListResourceTemplatesResult result = mcpSyncClient.listResourceTemplates(null);
 
 			assertThat(result).isNotNull();
-			assertThat(result.resourceTemplates()).isNotNull();
+			assertThat(result.getResourceTemplates()).isNotNull();
 		});
 	}
 
@@ -375,15 +377,15 @@ public abstract class AbstractMcpSyncClientTests {
 		withClient(createMcpTransport(), mcpSyncClient -> {
 			ListResourcesResult resources = mcpSyncClient.listResources(null);
 
-			if (!resources.resources().isEmpty()) {
-				Resource firstResource = resources.resources().get(0);
+			if (!resources.getResources().isEmpty()) {
+				Resource firstResource = resources.getResources().get(0);
 
 				// Test subscribe
-				assertThatCode(() -> mcpSyncClient.subscribeResource(new SubscribeRequest(firstResource.uri())))
+				assertThatCode(() -> mcpSyncClient.subscribeResource(new SubscribeRequest(firstResource.getUri())))
 					.doesNotThrowAnyException();
 
 				// Test unsubscribe
-				assertThatCode(() -> mcpSyncClient.unsubscribeResource(new UnsubscribeRequest(firstResource.uri())))
+				assertThatCode(() -> mcpSyncClient.unsubscribeResource(new UnsubscribeRequest(firstResource.getUri())))
 					.doesNotThrowAnyException();
 			}
 		});

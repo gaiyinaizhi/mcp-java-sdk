@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.var;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 
@@ -22,7 +26,11 @@ public class TomcatTestUtil {
 		// Prevent instantiation
 	}
 
-	public record TomcatServer(Tomcat tomcat, AnnotationConfigWebApplicationContext appContext) {
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class TomcatServer {
+		Tomcat tomcat; AnnotationConfigWebApplicationContext appContext;
 	}
 
 	public static TomcatServer createTomcatServer(String contextPath, int port, Class<?> componentClass) {

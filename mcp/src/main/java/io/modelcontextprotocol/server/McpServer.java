@@ -21,6 +21,7 @@ import io.modelcontextprotocol.spec.McpServerTransportProvider;
 import io.modelcontextprotocol.util.Assert;
 import io.modelcontextprotocol.util.DeafaultMcpUriTemplateManagerFactory;
 import io.modelcontextprotocol.util.McpUriTemplateManagerFactory;
+import lombok.var;
 import reactor.core.publisher.Mono;
 
 /**
@@ -402,7 +403,7 @@ public interface McpServer {
 		public AsyncSpecification resources(List<McpServerFeatures.AsyncResourceSpecification> resourceSpecifications) {
 			Assert.notNull(resourceSpecifications, "Resource handlers list must not be null");
 			for (McpServerFeatures.AsyncResourceSpecification resource : resourceSpecifications) {
-				this.resources.put(resource.resource().uri(), resource);
+				this.resources.put(resource.getResource().getUri(), resource);
 			}
 			return this;
 		}
@@ -427,7 +428,7 @@ public interface McpServer {
 		public AsyncSpecification resources(McpServerFeatures.AsyncResourceSpecification... resourceSpecifications) {
 			Assert.notNull(resourceSpecifications, "Resource handlers list must not be null");
 			for (McpServerFeatures.AsyncResourceSpecification resource : resourceSpecifications) {
-				this.resources.put(resource.resource().uri(), resource);
+				this.resources.put(resource.getResource().getUri(), resource);
 			}
 			return this;
 		}
@@ -505,7 +506,7 @@ public interface McpServer {
 		public AsyncSpecification prompts(List<McpServerFeatures.AsyncPromptSpecification> prompts) {
 			Assert.notNull(prompts, "Prompts list must not be null");
 			for (McpServerFeatures.AsyncPromptSpecification prompt : prompts) {
-				this.prompts.put(prompt.prompt().name(), prompt);
+				this.prompts.put(prompt.getPrompt().getName(), prompt);
 			}
 			return this;
 		}
@@ -529,7 +530,7 @@ public interface McpServer {
 		public AsyncSpecification prompts(McpServerFeatures.AsyncPromptSpecification... prompts) {
 			Assert.notNull(prompts, "Prompts list must not be null");
 			for (McpServerFeatures.AsyncPromptSpecification prompt : prompts) {
-				this.prompts.put(prompt.prompt().name(), prompt);
+				this.prompts.put(prompt.getPrompt().getName(), prompt);
 			}
 			return this;
 		}
@@ -893,7 +894,7 @@ public interface McpServer {
 		public SyncSpecification resources(List<McpServerFeatures.SyncResourceSpecification> resourceSpecifications) {
 			Assert.notNull(resourceSpecifications, "Resource handlers list must not be null");
 			for (McpServerFeatures.SyncResourceSpecification resource : resourceSpecifications) {
-				this.resources.put(resource.resource().uri(), resource);
+				this.resources.put(resource.getResource().getUri(), resource);
 			}
 			return this;
 		}
@@ -918,7 +919,7 @@ public interface McpServer {
 		public SyncSpecification resources(McpServerFeatures.SyncResourceSpecification... resourceSpecifications) {
 			Assert.notNull(resourceSpecifications, "Resource handlers list must not be null");
 			for (McpServerFeatures.SyncResourceSpecification resource : resourceSpecifications) {
-				this.resources.put(resource.resource().uri(), resource);
+				this.resources.put(resource.getResource().getUri(), resource);
 			}
 			return this;
 		}
@@ -997,7 +998,7 @@ public interface McpServer {
 		public SyncSpecification prompts(List<McpServerFeatures.SyncPromptSpecification> prompts) {
 			Assert.notNull(prompts, "Prompts list must not be null");
 			for (McpServerFeatures.SyncPromptSpecification prompt : prompts) {
-				this.prompts.put(prompt.prompt().name(), prompt);
+				this.prompts.put(prompt.getPrompt().getName(), prompt);
 			}
 			return this;
 		}
@@ -1021,7 +1022,7 @@ public interface McpServer {
 		public SyncSpecification prompts(McpServerFeatures.SyncPromptSpecification... prompts) {
 			Assert.notNull(prompts, "Prompts list must not be null");
 			for (McpServerFeatures.SyncPromptSpecification prompt : prompts) {
-				this.prompts.put(prompt.prompt().name(), prompt);
+				this.prompts.put(prompt.getPrompt().getName(), prompt);
 			}
 			return this;
 		}
@@ -1037,7 +1038,7 @@ public interface McpServer {
 		public SyncSpecification completions(List<McpServerFeatures.SyncCompletionSpecification> completions) {
 			Assert.notNull(completions, "Completions list must not be null");
 			for (McpServerFeatures.SyncCompletionSpecification completion : completions) {
-				this.completions.put(completion.referenceKey(), completion);
+				this.completions.put(completion.getReferenceKey(), completion);
 			}
 			return this;
 		}
@@ -1052,7 +1053,7 @@ public interface McpServer {
 		public SyncSpecification completions(McpServerFeatures.SyncCompletionSpecification... completions) {
 			Assert.notNull(completions, "Completions list must not be null");
 			for (McpServerFeatures.SyncCompletionSpecification completion : completions) {
-				this.completions.put(completion.referenceKey(), completion);
+				this.completions.put(completion.getReferenceKey(), completion);
 			}
 			return this;
 		}
@@ -1101,7 +1102,7 @@ public interface McpServer {
 		public SyncSpecification rootsChangeHandlers(
 				BiConsumer<McpSyncServerExchange, List<McpSchema.Root>>... handlers) {
 			Assert.notNull(handlers, "Handlers list must not be null");
-			return this.rootsChangeHandlers(List.of(handlers));
+			return this.rootsChangeHandlers(Arrays.asList(handlers));
 		}
 
 		/**

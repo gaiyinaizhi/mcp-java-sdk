@@ -9,6 +9,7 @@ import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.transport.HttpClientSseClientTransport;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.spec.McpSchema;
+import lombok.var;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.startup.Tomcat;
@@ -55,9 +56,8 @@ class HttpServletSseServerCustomContextPathTests {
 			throw new RuntimeException("Failed to start Tomcat", e);
 		}
 
-		this.clientBuilder = McpClient.sync(HttpClientSseClientTransport.builder("http://localhost:" + PORT)
-			.sseEndpoint(CUSTOM_CONTEXT_PATH + CUSTOM_SSE_ENDPOINT)
-			.build());
+		this.clientBuilder = McpClient.sync(new HttpClientSseClientTransport("http://localhost:" + PORT,
+				CUSTOM_CONTEXT_PATH + CUSTOM_SSE_ENDPOINT));
 	}
 
 	@AfterEach

@@ -7,10 +7,12 @@ package io.modelcontextprotocol.client.transport;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -68,6 +70,8 @@ public class StdioClientTransport implements McpClientTransport {
 
 	// visible for tests
 	private Consumer<String> stdErrorHandler = error -> logger.info("STDERR Message received: {}", error);
+
+	private Executor processExitWaitExecutor = Executors.newSingleThreadExecutor();
 
 	/**
 	 * Creates a new StdioClientTransport with the specified parameters and default
@@ -305,7 +309,7 @@ public class StdioClientTransport implements McpClientTransport {
 						// embedded newlines.
 						jsonMessage = jsonMessage.replace("\r\n", "\\n").replace("\n", "\\n").replace("\r", "\\n");
 
-						var os = this.process.getOutputStream();
+						OutputStream os = this.process.getOutputStream();
 						synchronized (os) {
 							os.write(jsonMessage.getBytes(StandardCharsets.UTF_8));
 							os.write("\n".getBytes(StandardCharsets.UTF_8));
@@ -356,13 +360,22 @@ public class StdioClientTransport implements McpClientTransport {
 			logger.debug("Sending TERM to process");
 			if (this.process != null) {
 				this.process.destroy();
-				return Mono.fromFuture(process.onExit());
+				return Mono.create(sink -> {
+					processExitWaitExecutor.execute(() -> {
+						try {
+							int exitCode = process.waitFor(); // 阻塞等待进程结束
+							sink.success(exitCode);          // 成功完成 Mono
+						} catch (InterruptedException e) {
+							sink.error(e);                   // 发生异常时完成 Mono
+						}
+					});
+				});
 			}
 			else {
 				logger.warn("Process not started");
 				return Mono.empty();
 			}
-		})).doOnNext(process -> {
+		})).doOnNext(__ -> {
 			if (process.exitValue() != 0) {
 				logger.warn("Process terminated with code " + process.exitValue());
 			}

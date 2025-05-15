@@ -10,7 +10,7 @@ public class McpError extends RuntimeException {
 	private JSONRPCError jsonRpcError;
 
 	public McpError(JSONRPCError jsonRpcError) {
-		super(jsonRpcError.message());
+		super(jsonRpcError.getMessage());
 		this.jsonRpcError = jsonRpcError;
 	}
 
