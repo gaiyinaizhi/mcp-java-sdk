@@ -27,6 +27,7 @@ import io.modelcontextprotocol.spec.McpServerTransportProvider;
 import io.modelcontextprotocol.util.DeafaultMcpUriTemplateManagerFactory;
 import io.modelcontextprotocol.util.McpUriTemplateManagerFactory;
 import io.modelcontextprotocol.util.Utils;
+import lombok.Getter;
 import lombok.var;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,7 @@ public class McpAsyncServer {
 
 	private static final Logger logger = LoggerFactory.getLogger(McpAsyncServer.class);
 
+	@Getter
 	private final McpServerTransportProvider mcpTransportProvider;
 
 	private final ObjectMapper objectMapper;

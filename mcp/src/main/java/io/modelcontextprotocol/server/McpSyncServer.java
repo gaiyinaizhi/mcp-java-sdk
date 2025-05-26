@@ -6,6 +6,7 @@ package io.modelcontextprotocol.server;
 
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.LoggingMessageNotification;
+import io.modelcontextprotocol.spec.McpServerTransportProvider;
 import io.modelcontextprotocol.util.Assert;
 
 /**
@@ -183,6 +184,10 @@ public class McpSyncServer {
 	 */
 	public McpAsyncServer getAsyncServer() {
 		return this.asyncServer;
+	}
+
+	public McpServerTransportProvider getMcpTransportProvider() {
+		return this.asyncServer.getMcpTransportProvider();
 	}
 
 }
