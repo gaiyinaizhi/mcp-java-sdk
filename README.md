@@ -1,4 +1,6 @@
 # MCP Java SDK
+- Fork from [modelcontextprotocol](https://github.com/modelcontextprotocol/java-sdk) but support Java8 Platform!!
+
 [![Build Status](https://github.com/modelcontextprotocol/java-sdk/actions/workflows/publish-snapshot.yml/badge.svg)](https://github.com/modelcontextprotocol/java-sdk/actions/workflows/publish-snapshot.yml)
 
 A set of projects that provide Java SDK integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). 
